@@ -20,7 +20,7 @@ This is a Django-based news application that allows journalists to publish artic
 
 1. Clone the Repository
 
-git clone https://github.com/NickDenji/example-repo.git
+git clone https://github.com/NickDenji/News_app.git
 cd example-repo/news_project
 
 2. Create Virtual Environment
