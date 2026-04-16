@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>News</title>
+</head>
+<body>
+
+    <div>
+        {% if user.is_authenticated %}
+            <p>
+                Logged in as {{ user.username }} ({{ user.role }})
+                
+                <form action="/logout/" method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <button type="submit">Logout</button>
+                </form>
+            </p>
+        {% else %}
+            <a href="/login/">Login</a>
+        {% endif %}
+    </div>
+
+    <hr>
+
+    <h1>Articles</h1>
+
+    {% for article in articles %}
+        <div style="margin-bottom: 20px;">
+
+            <h2>{{ article.title }}</h2>
+
+            <p>{{ article.content }}</p>
+
+            <small>
+                By {{ article.author }} |
+                Created: {{ article.created_at }}
+            </small>
+
+            <br>
+
+            <p>
+                <strong>Status:</strong>
+                {% if article.approved %}
+                    <span>✅ Approved</span>
+                {% else %}
+                    <span>❌ Not Approved</span>
+                {% endif %}
+            </p>
+
+            {% if user.role == 'editor' %}
+                {% if not article.approved %}
+                    <a href="{% url 'approve_article' article.id %}">
+                        Approve Article
+                    </a>
+                {% endif %}
+            {% endif %}
+
+            <hr>
+
+        </div>
+
+    {% empty %}
+        <p>No articles available.</p>
+    {% endfor %}
+
+</body>
+</html>
