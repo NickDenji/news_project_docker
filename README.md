@@ -127,3 +127,81 @@ Notes:
 This project uses MariaDB via Django’s MySQL backend.
 A virtual environment is recommended.
 Ensure MariaDB is running before starting the server.
+
+## How to Use the Application:
+
+### 1. Register & Login
+
+* Visit: http://127.0.0.1:8000/
+* Click **Register**
+* Choose a role:
+
+  * Reader
+  * Journalist
+  * Editor
+* Login with your credentials
+
+---
+
+### 2. Create an Article (Journalist)
+
+* Login as a **journalist**
+* Go to:
+
+  * `/api/articles/create/`
+* Fill in:
+
+  * Title
+  * Content
+* Submit → Article will be created as **Not Approved**
+
+---
+
+### 3. Approve an Article (Editor)
+
+* Login as an **editor**
+* Go to homepage
+* Click **Approve** on any unapproved article
+
+---
+
+### 4. View Articles (Reader)
+
+* Login as a **reader**
+* Only **approved articles** will be visible
+
+---
+
+### 5. Subscribe to a Journalist
+
+Currently subscriptions are managed via Django shell:
+
+```bash
+python manage.py shell
+```
+
+```python
+from news_app.models import User
+
+reader = User.objects.get(username='your_reader')
+journalist = User.objects.get(username='your_journalist')
+
+reader.subscribed_journalists.add(journalist)
+```
+
+After subscribing, visit:
+
+```
+/api/articles/subscribed/
+```
+
+to view articles from subscribed journalists only.
+
+---
+
+### 6. API Endpoints
+
+* `/api/articles/` → All approved articles
+* `/api/articles/subscribed/` → Subscribed articles (readers only)
+* `/api/articles/<id>/` → Single article
+* `/api/articles/create/` → Create article
