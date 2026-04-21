@@ -34,11 +34,11 @@ class User(AbstractUser):
 
     def save(self, *args, **kwargs):
         """
-        Override save method to assign the user to a Django group
+        Save the user instance and assign them to a Django Group
         based on their role.
 
-        This ensures role-based permissions can be managed using Django's
-        built-in authentication system.
+        This ensures role-based permissions can be enforced using
+        Django's built-in authentication and authorization system.
         """
         super().save(*args, **kwargs)
 
@@ -99,11 +99,11 @@ class Article(models.Model):
 
     def clean(self):
         """
-        Validate that the article has a valid author.
+        Validate that the article has an associated author.
 
         Raises:
-            ValueError: If the article does not have an associated author.
-        """
+        ValidationError: If no author is assigned.
+    """
         if not self.author:
             raise ValueError("Article must have an author.")
 
