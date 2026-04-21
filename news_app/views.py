@@ -30,9 +30,23 @@ from django.contrib import messages
 @login_required
 def update_article(request, article_id):
     """
-    Allows a journalist (author) or editor to update an article.
-    """
+    Update an existing article.
 
+    Access:
+        - Author of the article
+        - Editors only
+
+    Behaviour:
+        - GET: Returns form with current article data
+        - POST: Updates title and content
+
+    Args:
+        request: HTTP request object
+        article_id (int): ID of the article to update
+
+    Returns:
+        HttpResponse: Rendered page or redirect to home
+    """
     article = get_object_or_404(Article, id=article_id)
 
     if request.user != article.author and request.user.role != "editor":
@@ -50,7 +64,18 @@ def update_article(request, article_id):
 
 def register(request):
     """
-    Handles user registration with password confirmation.
+    Register a new user account.
+
+    Behaviour:
+        - Validates password confirmation
+        - Creates user with selected role
+        - Automatically logs user in
+
+    Args:
+        request: HTTP request object
+
+    Returns:
+        HttpResponse: Registration page or redirect to home
     """
     if request.method == 'POST':
         username = request.POST.get('username')
@@ -77,9 +102,16 @@ def register(request):
 
 def home(request):
     """
-    Home page forces authentication before access.
-    """
+    Render role-based home dashboard.
 
+    Behaviour:
+        - Readers: See journalists to subscribe to
+        - Editors: See all articles
+        - Journalists: See their own articles
+
+    Returns:
+        HttpResponse: Home page with role-specific context
+    """
     if not request.user.is_authenticated:
         return redirect("/login/")
 
@@ -108,8 +140,17 @@ def home(request):
 @login_required
 def subscribe(request, user_id):
     """
-    Allows a reader to subscribe to a journalist.
-    Prevents duplicate subscriptions.
+    Subscribe a reader to a journalist.
+
+    Constraints:
+        - Only readers can subscribe
+        - Prevents duplicate subscriptions
+
+    Args:
+        user_id (int): ID of journalist
+
+    Returns:
+        HttpResponse: Redirect to home
     """
     if request.user.role != "reader":
         return redirect("home")
@@ -119,7 +160,6 @@ def subscribe(request, user_id):
     if journalist.role != "journalist":
         return redirect("home")
 
-    # Only add if not already subscribed
     if journalist not in request.user.subscribed_journalists.all():
         request.user.subscribed_journalists.add(journalist)
 
@@ -129,7 +169,13 @@ def subscribe(request, user_id):
 @login_required
 def unsubscribe(request, user_id):
     """
-    Allows a reader to unsubscribe from a journalist.
+    Unsubscribe a reader from a journalist.
+
+    Args:
+        user_id (int): ID of journalist
+
+    Returns:
+        HttpResponse: Redirect to home
     """
     journalist = User.objects.get(id=user_id)
     request.user.subscribed_journalists.remove(journalist)
@@ -138,63 +184,38 @@ def unsubscribe(request, user_id):
 
 def is_editor(user):
     """
-    Check whether a given user has the 'editor' role.
-
-    This function is typically used with decorators such as
-    `user_passes_test` to restrict access to views that require
-    editor-level permissions.
+    Check if a user has editor privileges.
 
     Args:
-        user (User): The user instance to be checked.
+        user (User): User instance
 
     Returns:
-        bool: True if the user has the role 'editor', otherwise False.
+        bool: True if editor, else False
     """
     return user.role == "editor"
-
-
-def approve_article(request, article_id):
-    """
-    Allows only editors to approve articles and triggers API notification.
-    """
-    article = Article.objects.get(id=article_id)
-
-    if request.user.role != "editor":
-        return redirect("home")
-
-    article.approved = True
-    article.save()
-
-    send_mail(
-        subject="Article Approved",
-        message=f"Your article '{article.title}' has been approved.",
-        from_email="admin@example.com",
-        recipient_list=[article.author.email or "test@example.com"],
-        fail_silently=True,
-    )
-
-    return redirect("home")
 
 
 @login_required
 def create_article(request):
     """
-    Allows journalists to create articles via UI.
+    Create a new article.
+
+    Access:
+        - Journalists only
+
+    Returns:
+        HttpResponse: Form page or redirect to home
     """
     if request.user.role != "journalist":
         return redirect("home")
 
     if request.method == "POST":
-        title = request.POST.get("title")
-        content = request.POST.get("content")
-
         Article.objects.create(
-            title=title,
-            content=content,
+            title=request.POST.get("title"),
+            content=request.POST.get("content"),
             author=request.user,
             approved=False,
         )
-
         return redirect("home")
 
     return render(request, "news_app/create_article.html")
@@ -203,9 +224,17 @@ def create_article(request):
 @login_required
 def delete_article(request, article_id):
     """
-    Allows a journalist (author) or editor to delete an article.
-    """
+    Delete an article.
 
+    Access:
+        - Author or editor
+
+    Args:
+        article_id (int): ID of article
+
+    Returns:
+        HttpResponse: Redirect to home
+    """
     article = get_object_or_404(Article, id=article_id)
 
     if request.user != article.author and request.user.role != "editor":
@@ -352,7 +381,20 @@ def subscribe_newsletter(request, newsletter_id):
 @login_required
 def approve_article(request, article_id):
     """
-    Allows editors to approve an article and triggers email notification.
+    Approve an article and notify the author via email.
+
+    Access:
+        - Editors only
+
+    Behaviour:
+        - Marks article as approved
+        - Sends notification email
+
+    Args:
+        article_id (int): ID of article
+
+    Returns:
+        HttpResponse: Redirect to home
     """
 
     article = get_object_or_404(Article, id=article_id)
