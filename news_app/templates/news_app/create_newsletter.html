@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Create Newsletter</title>
+</head>
+<body>
+
+<h2>Create Newsletter</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    <input name="title" placeholder="Title"><br><br>
+    <textarea name="description" placeholder="Description"></textarea><br><br>
+
+    <h4>Select Articles</h4>
+
+    {% for article in articles %}
+        <input type="checkbox" name="articles" value="{{ article.id }}">
+        {{ article.title }}<br>
+    {% endfor %}
+
+    <br>
+    <button>Create</button>
+</form>
+
+</body>
+</html>

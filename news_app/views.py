@@ -1,5 +1,5 @@
 from django.shortcuts import render
-from .models import Article, User
+from .models import Article, User, Newsletter
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect
 from django.contrib.auth.decorators import user_passes_test
@@ -21,8 +21,31 @@ from rest_framework.decorators import permission_classes
 import requests
 from django.contrib.auth import login
 from .permissions import IsReader
+from django.core.mail import send_mail
+from django.contrib import messages
 
 # Create your views here.
+
+
+@login_required
+def update_article(request, article_id):
+    """
+    Allows a journalist (author) or editor to update an article.
+    """
+
+    article = get_object_or_404(Article, id=article_id)
+
+    if request.user != article.author and request.user.role != "editor":
+        return redirect("home")
+
+    if request.method == "POST":
+        article.title = request.POST.get("title")
+        article.content = request.POST.get("content")
+        article.save()
+        messages.success(request, "Article updated successfully")
+        return redirect("home")
+
+    return render(request, "news_app/update_article.html", {"article": article})
 
 
 def register(request):
@@ -75,7 +98,7 @@ def home(request):
         })
 
     if request.user.role == "journalist":
-        articles = Article.objects.filter(approved=True)
+        articles = Article.objects.filter(author=request.user)
         return render(request, "news_app/home.html", {
             "articles": articles,
             "is_reader": False
@@ -130,21 +153,25 @@ def is_editor(user):
     return user.role == "editor"
 
 
-@user_passes_test(is_editor)
 def approve_article(request, article_id):
     """
     Allows only editors to approve articles and triggers API notification.
     """
+    article = Article.objects.get(id=article_id)
 
-    article = get_object_or_404(Article, id=article_id)
+    if request.user.role != "editor":
+        return redirect("home")
 
-    if not article.approved:
-        article.approved = True
-        article.save()
+    article.approved = True
+    article.save()
 
-        requests.post(
-            "http://127.0.0.1:8000/api/approved/", json={"article_id": article.id}
-        )
+    send_mail(
+        subject="Article Approved",
+        message=f"Your article '{article.title}' has been approved.",
+        from_email="admin@example.com",
+        recipient_list=[article.author.email or "test@example.com"],
+        fail_silently=True,
+    )
 
     return redirect("home")
 
@@ -174,6 +201,22 @@ def create_article(request):
 
 
 @login_required
+def delete_article(request, article_id):
+    """
+    Allows a journalist (author) or editor to delete an article.
+    """
+
+    article = get_object_or_404(Article, id=article_id)
+
+    if request.user != article.author and request.user.role != "editor":
+        return redirect("home")
+
+    article.delete()
+    messages.success(request, "Article deleted")
+    return redirect("home")
+
+
+@login_required
 def subscribed_articles(request):
     """
     Displays articles from subscribed journalists (UI version).
@@ -190,6 +233,147 @@ def subscribed_articles(request):
     return render(request, "news_app/subscribed.html", {
         "articles": articles
     })
+
+
+@login_required
+def create_newsletter(request):
+    """
+    Allows ONLY journalists to create newsletters.
+    """
+
+    if request.user.role != "journalist":
+        return redirect("home")
+
+    articles = Article.objects.filter(author=request.user)
+
+    if request.method == "POST":
+        title = request.POST.get("title")
+        description = request.POST.get("description")
+        selected_articles = request.POST.getlist("articles")
+
+        newsletter = Newsletter.objects.create(
+            title=title,
+            description=description,
+            author=request.user
+        )
+
+        newsletter.articles.set(selected_articles)
+
+        return redirect("newsletters")
+
+    return render(request, "news_app/create_newsletter.html", {
+        "articles": articles
+    })
+
+
+@login_required
+def article_detail(request, article_id):
+    """
+    Displays full article content.
+    """
+    article = get_object_or_404(Article, id=article_id)
+
+    return render(request, "news_app/article_detail.html", {
+        "article": article
+    })
+
+
+@login_required
+def update_newsletter(request, newsletter_id):
+    """
+    Allows journalists (owner) or editors to edit a newsletter,
+    but only with articles belonging to the newsletter author.
+    """
+
+    newsletter = get_object_or_404(Newsletter, id=newsletter_id)
+
+    if request.user.id != newsletter.author.id and request.user.role != "editor":
+        return redirect("home")
+
+    articles = Article.objects.filter(author=newsletter.author)
+
+    if request.method == "POST":
+        newsletter.title = request.POST.get("title")
+        newsletter.description = request.POST.get("description")
+
+        selected_articles = request.POST.getlist("articles")
+
+        newsletter.save()
+        newsletter.articles.set(selected_articles)
+
+        return redirect("newsletters")
+
+    return render(request, "news_app/update_newsletter.html", {
+        "newsletter": newsletter,
+        "articles": articles
+    })
+
+
+@login_required
+def delete_newsletter(request, newsletter_id):
+    """
+    Allows journalists or editors to delete a newsletter.
+    """
+    newsletter = get_object_or_404(Newsletter, id=newsletter_id)
+
+    if request.user != newsletter.author and request.user.role != "editor":
+        return redirect("home")
+
+    newsletter.delete()
+    return redirect("newsletters")
+
+
+@login_required
+def list_newsletters(request):
+    """
+    Displays all newsletters.
+    """
+
+    newsletters = Newsletter.objects.all()
+
+    return render(request, "news_app/newsletters.html", {
+        "newsletters": newsletters
+    })
+
+
+@login_required
+def subscribe_newsletter(request, newsletter_id):
+    """
+    Allows a reader to subscribe to a newsletter.
+    """
+
+    newsletter = get_object_or_404(Newsletter, id=newsletter_id)
+    request.user.subscribed_publishers.add(newsletter)
+
+    messages.success(request, "Subscribed to newsletter")
+    return redirect("newsletters")
+
+
+@login_required
+def approve_article(request, article_id):
+    """
+    Allows editors to approve an article and triggers email notification.
+    """
+
+    article = get_object_or_404(Article, id=article_id)
+
+    if request.user.role != "editor":
+        return redirect("home")
+
+    article.approved = True
+    article.save()
+
+    send_mail(
+        subject="Article Approved",
+        message=f"Your article '{article.title}' has been approved.",
+        from_email="admin@example.com",
+        recipient_list=[article.author.email or "test@example.com"],
+        fail_silently=True,
+    )
+
+    messages.success(request, "Article approved")
+
+    return redirect("home")
 
 
 class ArticleListAPIView(APIView):

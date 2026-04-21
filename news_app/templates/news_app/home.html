@@ -9,12 +9,16 @@
 <div class="container mt-4">
 
     <div class="mb-3">
-        <a href="/" class="btn btn-outline-secondary btn-sm">Home</a>
+    <a href="/" class="btn btn-outline-secondary btn-sm">Home</a>
 
-        {% if is_reader %}
-            <a href="/subscribed/" class="btn btn-dark btn-sm">My Feed</a>
-        {% endif %}
-    </div>
+    <a href="/newsletters/" class="btn btn-outline-primary btn-sm">
+        Newsletters
+    </a>
+
+    {% if is_reader %}
+        <a href="/subscribed/" class="btn btn-dark btn-sm">My Feed</a>
+    {% endif %}
+</div>
 
     <div class="mb-3">
         {% if user.is_authenticated %}
@@ -116,11 +120,25 @@
                         {% endif %}
                     </p>
 
-                    {% if user.role == 'editor' and not article.approved %}
-                        <a href="{% url 'approve_article' article.id %}" class="btn btn-success btn-sm">
-                            Approve
-                        </a>
-                    {% endif %}
+                    <!-- ACTION BUTTONS -->
+                    <div class="mt-2">
+
+                        {% if user.role == 'editor' and not article.approved %}
+                            <a href="{% url 'approve_article' article.id %}" class="btn btn-success btn-sm">
+                                Approve
+                            </a>
+                        {% endif %}
+
+                        {% if user.id == article.author.id or user.role == 'editor' %}
+                            <a href="/update/{{ article.id }}/" class="btn btn-warning btn-sm">
+                                Edit
+                            </a>
+                            <a href="/delete/{{ article.id }}/" class="btn btn-danger btn-sm">
+                                Delete
+                            </a>
+                        {% endif %}
+
+                    </div>
 
                 </div>
             </div>

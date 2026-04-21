@@ -116,24 +116,21 @@ class Article(models.Model):
 
 class Newsletter(models.Model):
     """
-    Represents a newsletter containing a collection of articles.
-
-    A newsletter is authored by a user and can include multiple articles.
+    A curated collection of articles created by journalists.
     """
 
     title = models.CharField(max_length=255)
     description = models.TextField()
 
     author = models.ForeignKey(
-        User, on_delete=models.CASCADE, related_name="newsletters"
+        User,
+        on_delete=models.CASCADE,
+        related_name="newsletters"
     )
 
-    articles = models.ManyToManyField(Article)
+    articles = models.ManyToManyField(Article, blank=True)
 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        """
-        Return the newsletter title.
-        """
         return self.title
