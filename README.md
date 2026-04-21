@@ -1,59 +1,97 @@
-# News Application (Django)
+# Django News Application
 
 ## Overview
-This is a Django-based news application that allows journalists to publish articles, editors to approve them, and readers to view approved content.
+
+This is a Django-based news application that allows **journalists to create articles**, **editors to approve them**, and **readers to view approved content**.
+
+The system demonstrates:
+
+* Role-based access control
+* REST API design
+* Containerisation with Docker
+* Flexible database configuration for different environments
+
+---
 
 ## Features
-- Role-based access control (Reader, Journalist, Editor)
-- Article creation, update, and deletion via REST API
-- Article approval system
-- Subscription-based article filtering
-- Automated unit tests
+
+* Role-based access control (Reader, Journalist, Editor)
+* Article creation, update, and deletion via REST API
+* Article approval workflow (Editor-controlled)
+* Subscription-based article filtering
+* Docker container support
+* Automated unit testing
+
+---
 
 ## Technologies Used
-- Django
-- Django REST Framework
 
-## How to Run
+* Python
+* Django
+* Django REST Framework
+* SQLite (Docker environment)
+* MariaDB (local development)
+* HTML (Django Templates)
+* Docker
+
+---
+
+## Setup Instructions (Local Development)
+
+### 1. Clone the repository
 
 ```bash
-
-1. Clone the Repository
-
 git clone https://github.com/NickDenji/news_project.git
 cd news_project
+```
 
-2. Create Virtual Environment
+---
+
+### 2. Create a virtual environment
+
+```bash
 python -m venv .venv
+```
 
 Activate it:
 
-Windows:
+**Windows**
 
+```bash
 .venv\Scripts\activate
+```
 
-Mac/Linux:
+**Mac/Linux**
 
+```bash
 source .venv/bin/activate
+```
 
-3. Install Dependencies
+---
+
+### 3. Install dependencies
+
+```bash
 pip install -r requirements.txt
+```
 
-4. Setup MariaDB Database
+---
 
-Open your database client (e.g. HeidiSQL) and run:
+### 4. Configure Database (MariaDB - Optional)
 
+If you want to run the project with MariaDB locally:
+
+```sql
 CREATE DATABASE news_db;
 
-5. Create Database User
 CREATE USER 'news_user'@'localhost' IDENTIFIED BY 'password123';
 GRANT ALL PRIVILEGES ON news_db.* TO 'news_user'@'localhost';
 FLUSH PRIVILEGES;
+```
 
-6. Configure Database in Django
+Then update `settings.py`:
 
-Update settings.py:
-
+```python
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -64,77 +102,107 @@ DATABASES = {
         'PORT': '3306',
     }
 }
+```
 
-7. Apply Migrations
+---
+
+### 5. Apply migrations
+
+```bash
 python manage.py migrate
+```
 
-8. Create Superuser
+---
+
+### 6. Create superuser
+
+```bash
 python manage.py createsuperuser
+```
 
-9. Run the Development Server
+---
+
+### 7. Run the development server
+
+```bash
 python manage.py runserver
+```
 
-10. Access the Application
-Main site: http://127.0.0.1:8000/
-Admin panel: http://127.0.0.1:8000/admin/
-API root: http://127.0.0.1:8000/api/articles/
+---
 
-User Roles:
+### 8. Access the application
 
-Role	Permissions
-Reader	View approved articles, view subscribed content
-Journalist	Create and update own articles
-Editor	Approve and delete articles
+* Main site: http://127.0.0.1:8000/
+* Admin panel: http://127.0.0.1:8000/admin/
+* API: http://127.0.0.1:8000/api/articles/
 
-API Endpoints:
+---
 
-Method	Endpoint	Description
-GET	/api/articles/	List all approved articles
-GET	/api/articles/subscribed/	Articles from subscribed users
-GET	/api/articles/<id>/	Retrieve single article
-POST	/api/articles/create/	Create article (journalists only)
-PUT	/api/articles/<id>/update/	Update article
-DELETE	/api/articles/<id>/delete/	Delete article
+## Run with Docker (Recommended for Submission)
 
-Testing:
+This project can be run entirely using Docker without setting up a database manually.
 
-Run automated tests:
+### Build the container
 
-python manage.py test
+```bash
+docker build -t news-app .
+```
 
-Test Coverage Includes:
+---
 
-Successful requests (e.g. journalist creating articles)
-Failed requests (e.g. reader attempting restricted actions)
-Permission validation
-Subscription filtering
+### Run the container
 
-Features:
+```bash
+docker run -p 8000:8000 news-app
+```
 
-Role-based access control
-Article approval workflow
-Subscription-based filtering
-RESTful API design
-MariaDB database integration
-Automated unit testing
+---
 
-Dependencies:
+### Access the application
 
-All dependencies are listed in requirements.txt.
+```text
+http://localhost:8000
+```
 
-Notes:
+---
 
-This project uses MariaDB via Django’s MySQL backend.
-A virtual environment is recommended.
-Ensure MariaDB is running before starting the server.
+## Database Notes
 
-## How to Use the Application:
+* **SQLite is used automatically inside Docker** for simplicity and portability.
+* **MariaDB is optional** and intended for local development only.
+* No additional database setup is required when using Docker.
+
+---
+
+## User Roles
+
+| Role       | Permissions                                     |
+| ---------- | ----------------------------------------------- |
+| Reader     | View approved articles, view subscribed content |
+| Journalist | Create and update own articles                  |
+| Editor     | Approve and delete articles                     |
+
+---
+
+## API Endpoints
+
+| Method | Endpoint                     | Description                          |
+| ------ | ---------------------------- | ------------------------------------ |
+| GET    | `/api/articles/`             | List all approved articles           |
+| GET    | `/api/articles/subscribed/`  | Articles from subscribed journalists |
+| GET    | `/api/articles/<id>/`        | Retrieve single article              |
+| POST   | `/api/articles/create/`      | Create article (journalists only)    |
+| PUT    | `/api/articles/<id>/update/` | Update article                       |
+| DELETE | `/api/articles/<id>/delete/` | Delete article                       |
+
+---
+
+## How to Use the Application
 
 ### 1. Register & Login
 
 * Visit: http://127.0.0.1:8000/
-* Click **Register**
-* Choose a role:
+* Register as:
 
   * Reader
   * Journalist
@@ -145,36 +213,29 @@ Ensure MariaDB is running before starting the server.
 
 ### 2. Create an Article (Journalist)
 
-* Login as a **journalist**
-* Go to:
-
-  * `/api/articles/create/`
-* Fill in:
-
-  * Title
-  * Content
-* Submit → Article will be created as **Not Approved**
+* Login as a journalist
+* Create an article via UI or API
+* Articles are created as **not approved**
 
 ---
 
 ### 3. Approve an Article (Editor)
 
-* Login as an **editor**
-* Go to homepage
-* Click **Approve** on any unapproved article
+* Login as an editor
+* Approve articles from the homepage
 
 ---
 
 ### 4. View Articles (Reader)
 
-* Login as a **reader**
-* Only **approved articles** will be visible
+* Login as a reader
+* Only approved articles are visible
 
 ---
 
 ### 5. Subscribe to a Journalist
 
-Currently subscriptions are managed via Django shell:
+Subscriptions can be managed via Django shell:
 
 ```bash
 python manage.py shell
@@ -189,19 +250,40 @@ journalist = User.objects.get(username='your_journalist')
 reader.subscribed_journalists.add(journalist)
 ```
 
-After subscribing, visit:
+Then access:
 
 ```
 /api/articles/subscribed/
 ```
 
-to view articles from subscribed journalists only.
+---
+
+## Testing
+
+Run tests with:
+
+```bash
+python manage.py test
+```
+
+### Coverage includes:
+
+* Successful requests (e.g. journalist creating articles)
+* Permission validation
+* Failed requests (e.g. reader restricted actions)
+* Subscription filtering
 
 ---
 
-### 6. API Endpoints
+## Notes
 
-* `/api/articles/` → All approved articles
-* `/api/articles/subscribed/` → Subscribed articles (readers only)
-* `/api/articles/<id>/` → Single article
-* `/api/articles/create/` → Create article
+* Docker setup includes automatic migrations on startup
+* SQLite database is used in container for ease of setup
+* MariaDB configuration is optional for local development
+* Ensure dependencies are installed from `requirements.txt`
+
+---
+
+## Author
+
+Nicholas Dionissiou
