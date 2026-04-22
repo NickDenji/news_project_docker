@@ -184,6 +184,18 @@ http://localhost:8000
 
 ---
 
+## Publishers
+
+Publishers represent organisations that articles belong to.
+
+Editors can create publishers through the application.
+
+When creating an article, journalists can assign a publisher to it.
+
+This ensures that articles are grouped under specific organisations and addresses how publishers are created and used within the system.
+
+---
+
 ## API Endpoints
 
 | Method | Endpoint                     | Description                          |
