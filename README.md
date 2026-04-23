@@ -79,7 +79,19 @@ pip install -r requirements.txt
 
 ### 4. Configure Database (MariaDB - Recommended)
 
-If you want to run the project with MariaDB locally:
+MariaDB is the recommended database for running this project.
+
+#### Install MariaDB
+
+Download and install MariaDB from the official website:
+
+https://mariadb.org/download/
+
+Follow the installation instructions for your operating system and ensure the database service is running.
+
+---
+
+#### Create the database
 
 ```sql
 CREATE DATABASE news_db;
@@ -89,7 +101,11 @@ GRANT ALL PRIVILEGES ON news_db.* TO 'news_user'@'localhost';
 FLUSH PRIVILEGES;
 ```
 
-Then update `settings.py`:
+---
+
+#### Configure Django
+
+Update `settings.py`:
 
 ```python
 DATABASES = {
@@ -103,6 +119,23 @@ DATABASES = {
     }
 }
 ```
+
+---
+
+## Using SQLite (Development Only)
+
+For quick local development, you can switch to SQLite by modifying `settings.py`:
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+```
+
+SQLite is not recommended for production environments.
 
 ---
 
@@ -292,7 +325,8 @@ python manage.py test
 
 * Docker setup includes automatic migrations on startup
 * SQLite database is used in container for ease of setup
-* MariaDB configuration is optional for local development
+* MariaDB is the recommended database for running the project.
+* SQLite is used for development/testing purposes only.
 * Ensure dependencies are installed from `requirements.txt`
 
 ---
