@@ -41,8 +41,8 @@ The system demonstrates:
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/NickDenji/news_project.git
-cd news_project
+git clone https://github.com/NickDenji/news_project_docker.git
+cd news_project_docker
 ```
 
 ---
@@ -77,7 +77,7 @@ pip install -r requirements.txt
 
 ---
 
-### 4. Configure Database (MariaDB - Optional)
+### 4. Configure Database (MariaDB - Recommended)
 
 If you want to run the project with MariaDB locally:
 
@@ -169,7 +169,8 @@ http://localhost:8000
 ## Database Notes
 
 * **SQLite is used automatically inside Docker** for simplicity and portability.
-* **MariaDB is optional** and intended for local development only.
+* MariaDB is the recommended database for running the project.
+* SQLite is used inside Docker for convenience only.
 * No additional database setup is required when using Docker.
 
 ---
