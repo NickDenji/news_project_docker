@@ -29,8 +29,8 @@ The system demonstrates:
 * Python
 * Django
 * Django REST Framework
-* SQLite (Docker environment)
-* MariaDB (local development)
+* MariaDB (primary database for production/local use)
+* SQLite (used in Docker for simplicity)
 * HTML (Django Templates)
 * Docker
 
